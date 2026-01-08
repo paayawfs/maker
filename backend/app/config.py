@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     supabase_anon_key: str
     
     # CORS settings
-    cors_origins: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
+    cors_origins: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000", "maker-production-8686.up.railway.app"]
     
     class Config:
         env_file = "../.env"
