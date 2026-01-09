@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     
     supabase_url: str
     supabase_anon_key: str
+    supabase_jwt_secret: str
     
     # CORS settings
     cors_origins: list[str] = [

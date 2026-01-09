@@ -29,17 +29,17 @@ async def get_current_user(
     settings = get_settings()
     
     try:
-        # For Supabase, we can verify with the anon key as secret for HS256
-        # or fetch JWKS for RS256. Supabase uses HS256 with the JWT secret.
-        # Since we don't have the JWT secret, we'll decode and trust the token
-        # if it's valid format, and verify the audience and issuer.
-        
-        # Decode without verification first to get headers
-        unverified = jwt.decode(token, options={"verify_signature": False})
+        # Verify the JWT signature using Supabase's JWT secret
+        decoded = jwt.decode(
+            token,
+            settings.supabase_jwt_secret,
+            algorithms=["HS256"],
+            audience="authenticated"
+        )
         
         # Get the user ID from the token
-        user_id = unverified.get("sub")
-        email = unverified.get("email")
+        user_id = decoded.get("sub")
+        email = decoded.get("email")
         
         if not user_id:
             raise HTTPException(

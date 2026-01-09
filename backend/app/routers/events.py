@@ -14,7 +14,7 @@ import string
 router = APIRouter(prefix="/events", tags=["events"])
 
 
-def generate_event_code(length: int = 6) -> str:
+def generate_event_code(length: int = 8) -> str:
     """Generate a random alphanumeric event code."""
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
 
@@ -27,15 +27,23 @@ async def create_event(
     """Create a new event with a unique code."""
     supabase = get_supabase()
     
-    # Extract user ID from token if provided
+    # Extract user ID from token if provided (and valid)
     host_user_id = None
     if authorization and authorization.startswith("Bearer "):
         try:
             import jwt
+            from .config import get_settings
+            settings = get_settings()
             token = authorization.split(" ")[1]
-            decoded = jwt.decode(token, options={"verify_signature": False})
+            decoded = jwt.decode(
+                token,
+                settings.supabase_jwt_secret,
+                algorithms=["HS256"],
+                audience="authenticated"
+            )
             host_user_id = decoded.get("sub")
         except:
+            # Invalid token - treat as unauthenticated
             pass
     
     # Generate unique code (retry if collision)
