@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { User } from "@supabase/supabase-js";
 import { ToastContainer, useToast } from "@/components/Toast";
+import { API_BASE_URL } from "@/lib/api";
 
 interface Event {
     id: string;
@@ -79,7 +80,7 @@ export default function HostPage() {
                 }
             }
 
-            const response = await fetch("http://localhost:8000/events", {
+            const response = await fetch(`${API_BASE_URL}/events`, {
                 method: "POST",
                 headers,
                 body: JSON.stringify({
@@ -113,7 +114,7 @@ export default function HostPage() {
 
         setIsLoading(true);
         try {
-            const response = await fetch(`http://localhost:8000/events/${event.code}/questions`, {
+            const response = await fetch(`${API_BASE_URL}/events/${event.code}/questions`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -162,7 +163,7 @@ export default function HostPage() {
         try {
             const token = (await supabase.auth.getSession()).data.session?.access_token;
             const response = await fetch(
-                `http://localhost:8000/events/${event.code}/questions/${editingQuestion.id}`,
+                `${API_BASE_URL}/events/${event.code}/questions/${editingQuestion.id}`,
                 {
                     method: "PUT",
                     headers: {
@@ -203,7 +204,7 @@ export default function HostPage() {
         try {
             const token = (await supabase.auth.getSession()).data.session?.access_token;
             const response = await fetch(
-                `http://localhost:8000/events/${event.code}/questions/${deletingQuestion.id}`,
+                `${API_BASE_URL}/events/${event.code}/questions/${deletingQuestion.id}`,
                 {
                     method: "DELETE",
                     headers: { "Authorization": `Bearer ${token}` },

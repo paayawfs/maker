@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import { ToastContainer, useToast } from "@/components/Toast";
+import { API_BASE_URL } from "@/lib/api";
 
 interface Event {
     id: string;
@@ -72,7 +73,7 @@ export default function HostDashboardClient({ user }: { user: User }) {
     const fetchEvents = async () => {
         setIsLoading(true);
         try {
-            const response = await fetch(`http://localhost:8000/events/my-events`, {
+            const response = await fetch(`${API_BASE_URL}/events/my-events`, {
                 headers: {
                     "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
                 },
@@ -94,7 +95,7 @@ export default function HostDashboardClient({ user }: { user: User }) {
     const refreshEventDetails = useCallback(async (event: Event) => {
         // Silent refresh - no loading state
         try {
-            const guestsRes = await fetch(`http://localhost:8000/events/${event.code}/guests`);
+            const guestsRes = await fetch(`${API_BASE_URL}/events/${event.code}/guests`);
             if (guestsRes.ok) {
                 const guestsData = await guestsRes.json();
                 setGuests(guestsData);
@@ -102,7 +103,7 @@ export default function HostDashboardClient({ user }: { user: User }) {
 
             if (event.matching_completed) {
                 const token = (await supabase.auth.getSession()).data.session?.access_token;
-                const matchesRes = await fetch(`http://localhost:8000/events/${event.code}/matches`, {
+                const matchesRes = await fetch(`${API_BASE_URL}/events/${event.code}/matches`, {
                     headers: { "Authorization": `Bearer ${token}` },
                 });
                 if (matchesRes.ok) {
@@ -121,7 +122,7 @@ export default function HostDashboardClient({ user }: { user: User }) {
         setMatches([]);
 
         try {
-            const guestsRes = await fetch(`http://localhost:8000/events/${event.code}/guests`);
+            const guestsRes = await fetch(`${API_BASE_URL}/events/${event.code}/guests`);
             if (guestsRes.ok) {
                 const guestsData = await guestsRes.json();
                 setGuests(guestsData);
@@ -129,7 +130,7 @@ export default function HostDashboardClient({ user }: { user: User }) {
 
             if (event.matching_completed) {
                 const token = (await supabase.auth.getSession()).data.session?.access_token;
-                const matchesRes = await fetch(`http://localhost:8000/events/${event.code}/matches`, {
+                const matchesRes = await fetch(`${API_BASE_URL}/events/${event.code}/matches`, {
                     headers: { "Authorization": `Bearer ${token}` },
                 });
                 if (matchesRes.ok) {
@@ -149,7 +150,7 @@ export default function HostDashboardClient({ user }: { user: User }) {
 
         try {
             const token = (await supabase.auth.getSession()).data.session?.access_token;
-            const response = await fetch(`http://localhost:8000/events/${selectedEvent.code}/match`, {
+            const response = await fetch(`${API_BASE_URL}/events/${selectedEvent.code}/match`, {
                 method: "POST",
                 headers: { "Authorization": `Bearer ${token}` },
             });
@@ -178,7 +179,7 @@ export default function HostDashboardClient({ user }: { user: User }) {
 
         try {
             const token = (await supabase.auth.getSession()).data.session?.access_token;
-            const response = await fetch(`http://localhost:8000/events/${selectedEvent.code}/reveal`, {
+            const response = await fetch(`${API_BASE_URL}/events/${selectedEvent.code}/reveal`, {
                 method: "POST",
                 headers: { "Authorization": `Bearer ${token}` },
             });
@@ -206,7 +207,7 @@ export default function HostDashboardClient({ user }: { user: User }) {
 
         try {
             const token = (await supabase.auth.getSession()).data.session?.access_token;
-            const response = await fetch(`http://localhost:8000/events/${selectedEvent.code}`, {
+            const response = await fetch(`${API_BASE_URL}/events/${selectedEvent.code}`, {
                 method: "PUT",
                 headers: {
                     "Authorization": `Bearer ${token}`,
@@ -246,7 +247,7 @@ export default function HostDashboardClient({ user }: { user: User }) {
 
         try {
             const token = (await supabase.auth.getSession()).data.session?.access_token;
-            const response = await fetch(`http://localhost:8000/events/${selectedEvent.code}`, {
+            const response = await fetch(`${API_BASE_URL}/events/${selectedEvent.code}`, {
                 method: "DELETE",
                 headers: { "Authorization": `Bearer ${token}` },
             });

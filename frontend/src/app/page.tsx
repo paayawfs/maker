@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { API_BASE_URL } from "@/lib/api";
 
 export default function Home() {
   const [eventCode, setEventCode] = useState("");
@@ -20,7 +21,7 @@ export default function Home() {
     setError("");
 
     try {
-      const response = await fetch(`http://localhost:8000/events/${eventCode.toUpperCase()}`);
+      const response = await fetch(`${API_BASE_URL}/events/${eventCode.toUpperCase()}`);
 
       if (response.ok) {
         router.push(`/event/${eventCode.toUpperCase()}`);

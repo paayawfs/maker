@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ToastContainer, useToast } from "@/components/Toast";
+import { API_BASE_URL } from "@/lib/api";
 
 interface Event {
     code: string;
@@ -49,7 +50,7 @@ export default function EventPage() {
     useEffect(() => {
         const fetchEvent = async () => {
             try {
-                const response = await fetch(`http://localhost:8000/events/${code}`);
+                const response = await fetch(`${API_BASE_URL}/events/${code}`);
                 if (response.ok) {
                     const data = await response.json();
                     setEvent(data);
@@ -70,7 +71,7 @@ export default function EventPage() {
         if (isJoined) {
             const fetchQuestions = async () => {
                 try {
-                    const response = await fetch(`http://localhost:8000/events/${code}/questions`);
+                    const response = await fetch(`${API_BASE_URL}/events/${code}/questions`);
                     if (response.ok) {
                         const data = await response.json();
                         setQuestions(data);
@@ -89,7 +90,7 @@ export default function EventPage() {
         if (!guestId) return false;
 
         try {
-            const res = await fetch(`http://localhost:8000/events/${code}/my-match/${guestId}`);
+            const res = await fetch(`${API_BASE_URL}/events/${code}/my-match/${guestId}`);
             if (res.ok) {
                 const data = await res.json();
                 if (data.match) {
@@ -147,7 +148,7 @@ export default function EventPage() {
             if (gender) joinData.gender = gender;
             if (lookingFor) joinData.looking_for = lookingFor;
 
-            const response = await fetch(`http://localhost:8000/events/${code}/join`, {
+            const response = await fetch(`${API_BASE_URL}/events/${code}/join`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(joinData),
@@ -194,7 +195,7 @@ export default function EventPage() {
                 answer: answer,
             }));
 
-            const response = await fetch(`http://localhost:8000/events/${code}/responses`, {
+            const response = await fetch(`${API_BASE_URL}/events/${code}/responses`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -221,7 +222,7 @@ export default function EventPage() {
         setError("");
 
         try {
-            const res = await fetch(`http://localhost:8000/events/${code}/my-match/${guestId}`);
+            const res = await fetch(`${API_BASE_URL}/events/${code}/my-match/${guestId}`);
             if (res.ok) {
                 const data = await res.json();
                 if (data.match) {
