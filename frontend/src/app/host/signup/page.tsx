@@ -4,17 +4,18 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-export default function HostLoginPage() {
+export default function HostSignupPage() {
     const router = useRouter();
+    const [firstName, setFirstName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
 
-    const handleLogin = async (e: React.FormEvent) => {
+    const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!email.trim() || !password.trim()) {
-            setError("Please enter email and password");
+        if (!firstName.trim() || !email.trim() || !password.trim()) {
+            setError("Please fill in all fields");
             return;
         }
 
@@ -23,9 +24,14 @@ export default function HostLoginPage() {
 
         const supabase = createClient();
 
-        const { error } = await supabase.auth.signInWithPassword({
+        const { error } = await supabase.auth.signUp({
             email: email.trim(),
             password: password,
+            options: {
+                data: {
+                    first_name: firstName.trim(),
+                },
+            },
         });
 
         setIsLoading(false);
@@ -33,6 +39,7 @@ export default function HostLoginPage() {
         if (error) {
             setError(error.message);
         } else {
+            // Successful signup
             router.push("/host/dashboard");
         }
     };
@@ -45,15 +52,28 @@ export default function HostLoginPage() {
             <main className="relative z-10 flex flex-col items-center text-center max-w-md w-full">
                 <div className="mb-8">
                     <h1 className="text-4xl md:text-5xl font-bold mb-2 text-cream font-display">
-                        Host Login
+                        Host Signup
                     </h1>
                     <p className="text-cream/60">
-                        Sign in to manage your events
+                        Create an account to host your events
                     </p>
                 </div>
 
                 <div className="card w-full">
-                    <form onSubmit={handleLogin} className="space-y-4">
+                    <form onSubmit={handleSignup} className="space-y-4">
+                        <div className="text-left">
+                            <label className="block text-sand mb-2 font-medium text-sm">
+                                First Name
+                            </label>
+                            <input
+                                type="text"
+                                value={firstName}
+                                onChange={(e) => setFirstName(e.target.value)}
+                                placeholder="Jane"
+                                className="input-field"
+                            />
+                        </div>
+
                         <div className="text-left">
                             <label className="block text-sand mb-2 font-medium text-sm">
                                 Email Address
@@ -62,7 +82,7 @@ export default function HostLoginPage() {
                                 type="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                placeholder="your@email.com"
+                                placeholder="jane@example.com"
                                 className="input-field"
                                 autoComplete="email"
                             />
@@ -78,7 +98,7 @@ export default function HostLoginPage() {
                                 onChange={(e) => setPassword(e.target.value)}
                                 placeholder="••••••••"
                                 className="input-field"
-                                autoComplete="current-password"
+                                autoComplete="new-password"
                             />
                         </div>
 
@@ -91,24 +111,17 @@ export default function HostLoginPage() {
                             disabled={isLoading}
                             className="btn-primary w-full text-lg disabled:opacity-50"
                         >
-                            {isLoading ? "Signing In..." : "Sign In"}
+                            {isLoading ? "Creating Account..." : "Create Account ✨"}
                         </button>
                     </form>
 
                     <div className="mt-6 text-sm text-cream/40">
-                        Don&apos;t have an account?{" "}
-                        <a href="/host/signup" className="text-terracotta hover:text-terracotta-light">
-                            Sign up
+                        Already have an account?{" "}
+                        <a href="/host/login" className="text-terracotta hover:text-terracotta-light">
+                            Log in
                         </a>
                     </div>
                 </div>
-
-                <a
-                    href="/"
-                    className="mt-8 text-cream/40 hover:text-cream/60 transition-colors text-sm"
-                >
-                    ← Back to home
-                </a>
             </main>
         </div>
     );

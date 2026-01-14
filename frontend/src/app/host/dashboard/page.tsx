@@ -5,11 +5,11 @@ import HostDashboardClient from './DashboardClient'
 export default async function HostDashboardPage() {
     const supabase = await createClient()
 
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { session } } = await supabase.auth.getSession()
 
-    if (!user) {
+    if (!session) {
         redirect('/host/login')
     }
 
-    return <HostDashboardClient user={user} />
+    return <HostDashboardClient user={session.user} session={session} />
 }

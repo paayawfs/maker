@@ -14,7 +14,7 @@ import string
 router = APIRouter(prefix="/events", tags=["events"])
 
 
-def generate_event_code(length: int = 8) -> str:
+def generate_event_code(length: int = 6) -> str:
     """Generate a random alphanumeric event code."""
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
 
@@ -22,29 +22,13 @@ def generate_event_code(length: int = 8) -> str:
 @router.post("", response_model=EventResponse, status_code=status.HTTP_201_CREATED)
 async def create_event(
     event: EventCreate,
-    authorization: Optional[str] = Header(None)
+    current_user: dict = Depends(get_current_user)
 ):
     """Create a new event with a unique code."""
     supabase = get_supabase()
     
-    # Extract user ID from token if provided (and valid)
-    host_user_id = None
-    if authorization and authorization.startswith("Bearer "):
-        try:
-            import jwt
-            from .config import get_settings
-            settings = get_settings()
-            token = authorization.split(" ")[1]
-            decoded = jwt.decode(
-                token,
-                settings.supabase_jwt_secret,
-                algorithms=["HS256"],
-                audience="authenticated"
-            )
-            host_user_id = decoded.get("sub")
-        except:
-            # Invalid token - treat as unauthenticated
-            pass
+    # Use authenticated user ID
+    host_user_id = current_user["id"]
     
     # Generate unique code (retry if collision)
     for _ in range(5):
@@ -130,13 +114,11 @@ async def join_event(code: str, guest: GuestJoin):
     event_id = event_result.data[0]["id"]
     
     # Check if nickname already taken in this event
-    existing_guest = supabase.table("guests").select("id").eq("event_id", event_id).eq("nickname", guest.nickname).execute()
+    existing_guest = supabase.table("guests").select("id, event_id, nickname, joined_at").eq("event_id", event_id).eq("nickname", guest.nickname).execute()
     
     if existing_guest.data:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Nickname already taken in this event"
-        )
+        # If guest already exists, return their info (simple re-join)
+        return existing_guest.data[0]
     
     # Insert guest
     guest_data = {

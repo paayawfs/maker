@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { User } from "@supabase/supabase-js";
+import { User, Session } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import { ToastContainer, useToast } from "@/components/Toast";
 import { API_BASE_URL } from "@/lib/api";
@@ -33,7 +33,7 @@ interface Match {
     score: number;
 }
 
-export default function HostDashboardClient({ user }: { user: User }) {
+export default function HostDashboardClient({ user, session }: { user: User, session: Session }) {
     const [events, setEvents] = useState<Event[]>([]);
     const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
     const [guests, setGuests] = useState<Guest[]>([]);
@@ -73,9 +73,19 @@ export default function HostDashboardClient({ user }: { user: User }) {
     const fetchEvents = async () => {
         setIsLoading(true);
         try {
+            // Use session prop first, falling back to client-side session (e.g. if refreshed)
+            const { data: { session: currentSession } } = await supabase.auth.getSession();
+            const token = currentSession?.access_token || session?.access_token;
+
+            if (!token) {
+                console.error("No access token found");
+                showError("Authentication error. Please login again.");
+                return;
+            }
+
             const response = await fetch(`${API_BASE_URL}/events/my-events`, {
                 headers: {
-                    "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+                    "Authorization": `Bearer ${token}`,
                 },
             });
             if (response.ok) {
@@ -102,13 +112,16 @@ export default function HostDashboardClient({ user }: { user: User }) {
             }
 
             if (event.matching_completed) {
-                const token = (await supabase.auth.getSession()).data.session?.access_token;
-                const matchesRes = await fetch(`${API_BASE_URL}/events/${event.code}/matches`, {
-                    headers: { "Authorization": `Bearer ${token}` },
-                });
-                if (matchesRes.ok) {
-                    const matchesData = await matchesRes.json();
-                    setMatches(matchesData);
+                const { data: { session } } = await supabase.auth.getSession();
+                const token = session?.access_token;
+                if (token) {
+                    const matchesRes = await fetch(`${API_BASE_URL}/events/${event.code}/matches`, {
+                        headers: { "Authorization": `Bearer ${token}` },
+                    });
+                    if (matchesRes.ok) {
+                        const matchesData = await matchesRes.json();
+                        setMatches(matchesData);
+                    }
                 }
             }
         } catch (error) {
@@ -129,13 +142,16 @@ export default function HostDashboardClient({ user }: { user: User }) {
             }
 
             if (event.matching_completed) {
-                const token = (await supabase.auth.getSession()).data.session?.access_token;
-                const matchesRes = await fetch(`${API_BASE_URL}/events/${event.code}/matches`, {
-                    headers: { "Authorization": `Bearer ${token}` },
-                });
-                if (matchesRes.ok) {
-                    const matchesData = await matchesRes.json();
-                    setMatches(matchesData);
+                const { data: { session } } = await supabase.auth.getSession();
+                const token = session?.access_token;
+                if (token) {
+                    const matchesRes = await fetch(`${API_BASE_URL}/events/${event.code}/matches`, {
+                        headers: { "Authorization": `Bearer ${token}` },
+                    });
+                    if (matchesRes.ok) {
+                        const matchesData = await matchesRes.json();
+                        setMatches(matchesData);
+                    }
                 }
             }
         } catch (error) {
@@ -149,7 +165,11 @@ export default function HostDashboardClient({ user }: { user: User }) {
         setActionLoading("matching");
 
         try {
-            const token = (await supabase.auth.getSession()).data.session?.access_token;
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
+
+            if (!token) throw new Error("No authentication token");
+
             const response = await fetch(`${API_BASE_URL}/events/${selectedEvent.code}/match`, {
                 method: "POST",
                 headers: { "Authorization": `Bearer ${token}` },
@@ -178,7 +198,11 @@ export default function HostDashboardClient({ user }: { user: User }) {
         setActionLoading("revealing");
 
         try {
-            const token = (await supabase.auth.getSession()).data.session?.access_token;
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
+
+            if (!token) throw new Error("No authentication token");
+
             const response = await fetch(`${API_BASE_URL}/events/${selectedEvent.code}/reveal`, {
                 method: "POST",
                 headers: { "Authorization": `Bearer ${token}` },
@@ -206,7 +230,11 @@ export default function HostDashboardClient({ user }: { user: User }) {
         setActionLoading("editing");
 
         try {
-            const token = (await supabase.auth.getSession()).data.session?.access_token;
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
+
+            if (!token) throw new Error("No authentication token");
+
             const response = await fetch(`${API_BASE_URL}/events/${selectedEvent.code}`, {
                 method: "PUT",
                 headers: {
@@ -246,7 +274,11 @@ export default function HostDashboardClient({ user }: { user: User }) {
         setActionLoading("deleting");
 
         try {
-            const token = (await supabase.auth.getSession()).data.session?.access_token;
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
+
+            if (!token) throw new Error("No authentication token");
+
             const response = await fetch(`${API_BASE_URL}/events/${selectedEvent.code}`, {
                 method: "DELETE",
                 headers: { "Authorization": `Bearer ${token}` },

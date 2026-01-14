@@ -29,13 +29,36 @@ async def get_current_user(
     settings = get_settings()
     
     try:
-        # Verify the JWT signature using Supabase's JWT secret
-        decoded = jwt.decode(
-            token,
-            settings.supabase_jwt_secret,
-            algorithms=["HS256"],
-            audience="authenticated"
-        )
+        # Debug: Check algorithm
+        header = jwt.get_unverified_header(token)
+        # print(f"DEBUG: Token Header: {header}")
+
+        # If alg is ES256, use JWKS
+        if header.get('alg') == 'RS256' or header.get('alg') == 'ES256':
+             # Fetch JWKS from Supabase
+            jwks_url = f"{settings.supabase_url}/rest/v1/auth/jwks"
+            # Note: Supabase JWKS URL might be under /auth/v1/jwks depending on version, 
+            # but /rest/v1/auth/jwks or /auth/v1/jwks are common.
+            # Using the standard PyJWKClient to fetch and find key
+            
+            # Use the PyJWKClient to fetch the signing key
+            jwks_client = jwt.PyJWKClient(f"{settings.supabase_url}/auth/v1/.well-known/jwks.json")
+            signing_key = jwks_client.get_signing_key_from_jwt(token)
+            
+            decoded = jwt.decode(
+                token,
+                signing_key.key,
+                algorithms=["HS256", "RS256", "ES256"],
+                audience="authenticated"
+            )
+        else:
+            # Fallback to HS256 with secret (for local dev or legacy)
+            decoded = jwt.decode(
+                token,
+                settings.supabase_jwt_secret,
+                algorithms=["HS256"],
+                audience="authenticated"
+            )
         
         # Get the user ID from the token
         user_id = decoded.get("sub")
@@ -52,12 +75,20 @@ async def get_current_user(
             "email": email,
         }
         
+    except jwt.PyJWKClientError as e:
+        print(f"DEBUG: JWKS Error: {str(e)}")
+        raise HTTPException(
+             status_code=status.HTTP_401_UNAUTHORIZED,
+             detail="Could not verify token signature via JWKS"
+        )
     except jwt.ExpiredSignatureError:
+        print("DEBUG: Token Expired")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token has expired"
         )
     except jwt.InvalidTokenError as e:
+        print(f"DEBUG: Invalid Token Error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Invalid token: {str(e)}"

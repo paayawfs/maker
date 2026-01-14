@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ToastContainer, useToast } from "@/components/Toast";
+import ChatWindow from "@/components/ChatWindow";
 import { API_BASE_URL } from "@/lib/api";
 
 interface Event {
@@ -20,12 +21,13 @@ interface Question {
     order_index: number;
 }
 
+// Change this interface at the top of EventPage.tsx
 interface Match {
-    id: string;
+    match_id: string;   // <--- This is the Conversation ID (UUID)
+    partner_id: string; // <--- This is the Person's ID (UUID)
     nickname: string;
     score: number;
 }
-
 export default function EventPage() {
     const params = useParams();
     const router = useRouter();
@@ -460,31 +462,26 @@ export default function EventPage() {
                 {/* Matched Step */}
                 {
                     currentStep === "matched" && match && (
-                        <div className="card w-full max-w-md py-12">
-                            <div className="w-24 h-24 mx-auto mb-6 rounded-full gradient-accent flex items-center justify-center text-5xl animate-bounce">
+                        <div className="card w-full max-w-md py-6">
+                            <div className="w-16 h-16 mx-auto mb-4 rounded-full gradient-accent flex items-center justify-center text-3xl animate-bounce">
                                 💕
                             </div>
-                            <h2 className="text-3xl font-bold text-white mb-2">
+                            <h2 className="text-2xl font-bold text-white mb-1">
                                 It&apos;s a Match!
                             </h2>
-                            <p className="text-purple-300/60 mb-6">
-                                You matched with:
+                            <p className="text-purple-300/60 mb-4">
+                                You matched with <span className="text-pink-300 font-bold">{match.nickname}</span>
                             </p>
-                            <div className="p-6 glass-light rounded-2xl">
-                                <p className="text-3xl font-bold bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
-                                    {match.nickname}
-                                </p>
-                                <p className="text-purple-300/60 mt-2">
-                                    {Math.round(match.score * 100)}% compatibility
-                                </p>
-                            </div>
-                            <p className="text-purple-300/40 text-sm mt-6">
-                                Go find them and say hi! 👋
-                            </p>
+
+                            {/* Chat Window Integration */}
+                            <ChatWindow
+                                matchId={match.match_id}
+                                guestId={guestId!}
+                                opponentName={match.nickname}
+                            />
                         </div>
                     )
                 }
-
                 {/* Back to home */}
                 <a
                     href="/"
