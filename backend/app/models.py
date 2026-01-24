@@ -60,7 +60,7 @@ class GuestResponse(BaseModel):
 
 class QuestionCreate(BaseModel):
     """Request model for creating a question."""
-    text: str = Field(..., min_length=1)
+    text: str = Field(..., min_length=1, max_length=500)
     question_type: str = "multiple_choice"
     options: Optional[list[str]] = None
     order_index: int = 0
@@ -78,7 +78,7 @@ class QuestionResponse(BaseModel):
 
 class QuestionUpdate(BaseModel):
     """Request model for updating a question."""
-    text: Optional[str] = Field(None, min_length=1)
+    text: Optional[str] = Field(None, min_length=1, max_length=500)
     options: Optional[list[str]] = None
     order_index: Optional[int] = None
 
@@ -88,7 +88,7 @@ class QuestionUpdate(BaseModel):
 class AnswerSubmit(BaseModel):
     """Single answer submission."""
     question_id: UUID
-    answer: str
+    answer: str = Field(..., max_length=500)
 
 
 class AnswersSubmit(BaseModel):

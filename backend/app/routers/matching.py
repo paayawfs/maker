@@ -278,12 +278,12 @@ async def get_my_match(code: str, guest_id: str):
     
     return {
         "match": {
-            "id": matched_guest["id"],
+            "match_id": match["id"],          # <--- ✅ ADD THIS (The actual conversation ID)
+            "partner_id": matched_guest["id"], # <--- Rename this to be clear it's the person
             "nickname": matched_guest["nickname"],
             "score": match["score"],
         }
     }
-
 
 @router.delete("/{code}/matches/{match_id}")
 async def delete_match(code: str, match_id: str, current_user: dict = Depends(get_current_user)):
